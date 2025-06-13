@@ -36,10 +36,11 @@ fn ray_color(ray_direction: vec3f, ray_origin: vec3f) -> vec3f {
     var hit_point: vec3f;
     var normal: vec3f;
     let sphere_count = 3; 
+    let animated_offset = sin(uniforms.time) * 0.5; 
     let spheres = array<vec3f, 3>(
-        vec3f(0.0, 0.0, -3.0), // Sphere center
-        vec3f(1.0, 0.0, -3.0), // Ground plane
-        vec3f(-1.0, 0.0, -3.0) // Another sphere for variety
+        vec3f(animated_offset, 0.0, -3.0), // Sphere center
+        vec3f(1.0 + cos(uniforms.time * 0.5), 0.0, -3.0), // Ground plane
+        vec3f(-1.0, sin(uniforms.time * 2.0) * 0.3, -3.0) // Another sphere for variety
     );
     var i = 0u;
     for(var i: i32; i < sphere_count; i++) {

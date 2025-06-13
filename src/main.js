@@ -68,16 +68,28 @@ export default async function webgpu() {
 
    const bindGroupLayout = renderPipeline.getBindGroupLayout(0);
 
-  // Create the bind group
-  let bindGroup = device.createBindGroup({
-      layout: bindGroupLayout,
-      entries: [{
-          binding: 0,
-          resource: { buffer: uniformsBuffer }
-      }]
-  });
-  const commandBuffer = engine.encodeRenderPass(6, renderPipeline, vertexBuffer, bindGroup);
-  await engine.submitCommand(commandBuffer);
+   function animate() {
+    const currentTime = performance.now() / 1000;
+    
+    // Update time at offset 8 (third float)
+    device.queue.writeBuffer(uniformsBuffer, 8, new Float32Array([currentTime]));
+    
+    // Recreate bind group (or create once outside loop)
+    const bindGroup = device.createBindGroup({
+        layout: bindGroupLayout,
+        entries: [{
+            binding: 0,
+            resource: { buffer: uniformsBuffer }
+        }]
+    });
+    
+    const commandBuffer = engine.encodeRenderPass(6, renderPipeline, vertexBuffer, bindGroup);
+    engine.submitCommand(commandBuffer);
+    
+    requestAnimationFrame(animate);
+}
+
+ requestAnimationFrame(animate); 
 }
 
 webgpu(); 
