@@ -40,15 +40,18 @@ export default async function webgpu() {
     ]
   };
 
-  const canvasSize = new Float32Array([
+  const uniformsData = new Float32Array([
     canvas.width,
-    canvas.height
-  ]); 
-  const canvasSizeBuffer = device.createBuffer({
-    size: canvasSize.byteLength,
+    canvas.height, 
+    0.0,// time
+    0.0 // padding
+  ]
+); 
+  const uniformsBuffer = device.createBuffer({
+    size: uniformsData.byteLength,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
-  device.queue.writeBuffer(canvasSizeBuffer, 0, canvasSize);
+  device.queue.writeBuffer(uniformsBuffer, 0, uniformsData);
 
  
   const shaderModule = device.createShaderModule({
@@ -70,7 +73,7 @@ export default async function webgpu() {
       layout: bindGroupLayout,
       entries: [{
           binding: 0,
-          resource: { buffer: canvasSizeBuffer }
+          resource: { buffer: uniformsBuffer }
       }]
   });
   const commandBuffer = engine.encodeRenderPass(6, renderPipeline, vertexBuffer, bindGroup);

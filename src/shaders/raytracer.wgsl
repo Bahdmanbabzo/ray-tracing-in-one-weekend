@@ -1,7 +1,12 @@
 struct VertexOutput {
     @builtin(position) position: vec4f,
 };
-@group(0) @binding(0) var<uniform> canvas_size: vec2f; 
+struct Uniforms {
+    canvas_size: vec2f, 
+    time: f32,
+};
+@group(0) @binding(0) var<uniform> uniforms: Uniforms; 
+
 @vertex
 fn vs_main(
     @location(0) position: vec2f,
@@ -56,7 +61,7 @@ fn ray_color(ray_direction: vec3f, ray_origin: vec3f) -> vec3f {
 @fragment
 fn fs_main(input: VertexOutput) -> @location(0) vec4f {
 
-    let aspect_ratio = canvas_size.x/ canvas_size.y;
+    let aspect_ratio = uniforms.canvas_size.x/ uniforms.canvas_size.y;
 
     // Camera setup
     let fov = 30.0; 
@@ -64,7 +69,7 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4f {
     let camera_position = vec3f(0.0, 0.0, 0.0);
 
     // Convert input.color.xy to screen space
-    let pixel_coords = input.position.xy / canvas_size; 
+    let pixel_coords = input.position.xy / uniforms.canvas_size; 
     let ndc = pixel_coords * 2.0 - 1.0; 
     // Map to viewport coordinates
     let viewport_x = ndc.x * aspect_ratio; 
