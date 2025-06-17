@@ -1,7 +1,6 @@
 import Engine from './engine/engine.js';
 import RenderPipelineBuilder from './engine/renderPipeline.js';
-import quadShaderCode from './shaders/quad.wgsl?raw';
-import rayTracer from './shaders/rayTracer.wgsl?raw';
+import rayTracer from './shaders/raytracer.wgsl?raw';
 
 export default async function webgpu() {
   const canvas = document.querySelector('canvas');
