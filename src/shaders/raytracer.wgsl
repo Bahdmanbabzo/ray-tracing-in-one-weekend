@@ -22,6 +22,35 @@ fn is_front_facing(ray_direction: vec3f, normal: vec3f) -> bool {
 fn rand11(n: f32) -> f32 { 
     return fract(sin(n) * 43758.5453123); 
 }
+
+fn hash22(p: vec2<f32>) -> vec2<f32> {
+  var p3 = fract(vec3<f32>(p.xyx) * vec3<f32>(0.1031, 0.1030, 0.0973));
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.xx + p3.yz) * p3.zy);
+}
+fn noise2D(p: vec2<f32>) -> f32 {
+  let i = floor(p);
+  let f = fract(p);
+  let u = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(dot(hash22(i + vec2<f32>(0.0, 0.0)), f - vec2<f32>(0.0, 0.0)),
+        dot(hash22(i + vec2<f32>(1.0, 0.0)), f - vec2<f32>(1.0, 0.0)), u.x),
+    mix(dot(hash22(i + vec2<f32>(0.0, 1.0)), f - vec2<f32>(0.0, 1.0)),
+        dot(hash22(i + vec2<f32>(1.0, 1.0)), f - vec2<f32>(1.0, 1.0)), u.x), u.y);
+}
+fn hsv_to_rgb(h: f32, s: f32, v: f32) -> vec3f {
+    let c = v * s;
+    let x = c * (1.0 - abs(((h * 6.0) % 2.0) - 1.0));
+    let m = v - c;
+    
+    if (h < 1.0/6.0) { return vec3f(c + m, x + m, m); }
+    else if (h < 2.0/6.0) { return vec3f(x + m, c + m, m); }
+    else if (h < 3.0/6.0) { return vec3f(m, c + m, x + m); }
+    else if (h < 4.0/6.0) { return vec3f(m, x + m, c + m); }
+    else if (h < 5.0/6.0) { return vec3f(x + m, m, c + m); }
+    else { return vec3f(c + m, m, x + m); }
+}
+
 // Generates a random vec3 
 fn rand_vec3(p:f32) -> vec3f {
     return vec3f(
@@ -91,10 +120,26 @@ fn ray_color(initial_ray_direction: vec3f, initial_ray_origin: vec3f) -> vec3f {
             // Set up the NEXT ray for the next bounce
             ray_origin = hit_point + normal * 0.001; // Small offset
             ray_direction = normalize(hemisphere_vec);
-            
-            attenuation = attenuation * 1.0;
-            let animation_factor = sin(time);
-            attenuation = attenuation * animation_factor;
+
+            let plasma_coord = hit_point.xy * 3.0;
+            let plasma1 = noise2D(plasma_coord + time * vec2f(0.1, 0.2));
+            let plasma2 = noise2D(plasma_coord * 1.3 + time * vec2f(-0.15, 0.1));
+            let plasma3 = noise2D(plasma_coord * 0.7 + time * vec2f(0.05, -0.25));
+
+            let combined_plasma = (plasma1 + plasma2 + plasma3) / 3.0;
+
+            // Use plasma to control sphere visibility
+            let disappear_threshold = sin(time * 0.5) * 0.5 + 0.5; 
+            let plasma_alpha = combined_plasma * 0.5 + 0.5; 
+
+            if (plasma_alpha < disappear_threshold) {
+                continue; 
+            }
+
+            // For visible parts, apply plasma coloring
+            let hue = fract(combined_plasma + time * 0.05);
+            let plasma_color = hsv_to_rgb(hue, 0.8, 0.9);
+            attenuation = attenuation * plasma_color;
         } else {
             // Ray missed - hit background, return sky color
             let a = 0.5 * (ray_direction.y + 1.0); 
