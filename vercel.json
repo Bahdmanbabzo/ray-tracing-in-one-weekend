@@ -1,0 +1,10 @@
+{
+    "git": {
+        "productionBranch": "testing-with-time", 
+        "deploymentEnabled": {
+            "main": false, 
+            "testing-with-time": true, 
+            "random-experiments": false
+        }
+    }
+}
