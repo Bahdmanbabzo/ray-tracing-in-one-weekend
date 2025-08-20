@@ -2,6 +2,7 @@ struct VertexOutput {
     @builtin(position) position: vec4f,
 };
 @group(0) @binding(0) var<uniform> canvas_size: vec2f; 
+@group(0) @binding(1) var<uniform> time: f32;
 
 @vertex
 fn vs_main(
@@ -91,8 +92,9 @@ fn ray_color(initial_ray_direction: vec3f, initial_ray_origin: vec3f) -> vec3f {
             ray_origin = hit_point + normal * 0.001; // Small offset
             ray_direction = normalize(hemisphere_vec);
             
-            // Absorb 50% of light per bounce
             attenuation = attenuation * 1.0;
+            let animation_factor = sin(time);
+            attenuation = attenuation * animation_factor;
         } else {
             // Ray missed - hit background, return sky color
             let a = 0.5 * (ray_direction.y + 1.0); 

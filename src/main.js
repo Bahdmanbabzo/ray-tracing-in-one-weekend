@@ -50,11 +50,12 @@ export default async function webgpu() {
   });
   device.queue.writeBuffer(canvasSizeBuffer, 0, canvasSize);
 
-  const debugBuffer = device.createBuffer({
+  const timeData = new Float32Array([0.0]);
+  const timeBuffer = device.createBuffer({
     size: 16,
-    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
   });
-  device.queue.writeBuffer(debugBuffer, 0, new Float32Array([0.0, 0.0, 0.0]));
+  device.queue.writeBuffer(timeBuffer, 0, timeData);
  
   const shaderModule = device.createShaderModule({
     code: rayTracer
@@ -75,10 +76,19 @@ export default async function webgpu() {
       layout: bindGroupLayout,
       entries: [
         { binding: 0, resource: { buffer: canvasSizeBuffer }}, 
+        { binding: 1, resource: { buffer: timeBuffer }},
       ]
   });
-  const commandBuffer = engine.encodeRenderPass(6, renderPipeline, vertexBuffer, bindGroup);
-  await engine.submitCommand(commandBuffer);
+
+  function render(currentTime) {
+    // Update the time uniform
+    timeData[0] = currentTime * 0.001;
+    device.queue.writeBuffer(timeBuffer, 0, timeData);
+    const commandBuffer = engine.encodeRenderPass(6, renderPipeline, vertexBuffer, bindGroup);
+    engine.submitCommand(commandBuffer);
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
 }
 
 webgpu(); 
