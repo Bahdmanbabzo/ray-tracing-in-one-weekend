@@ -3,6 +3,7 @@ import RenderPipelineBuilder from './engine/renderPipeline.js';
 import quadShaderCode from './shaders/quad.wgsl?raw';
 import rayTracer from './shaders/rayTracer.wgsl?raw';
 import { Hittable } from './hittables.js';
+import * as dat from 'dat.gui'
 
 export default async function webgpu() {
   const canvas = document.querySelector('canvas');
@@ -10,7 +11,6 @@ export default async function webgpu() {
   const device = engine.device;
 
   // Set the canvas size to match the window size and device pixel ratio
-  // This ensures that the canvas is rendered at the correct resolution
   const devicePixelRatio = window.devicePixelRatio || 1;
   canvas.width = window.innerWidth * devicePixelRatio;
   canvas.height = window.innerHeight * devicePixelRatio ;
@@ -19,7 +19,6 @@ export default async function webgpu() {
   canvas.style.height = `${window.innerHeight}px`;
 
   const vertexData = new Float32Array([
-    // x,    y
     -1.0, -1.0, 
      1.0, -1.0, 
     -1.0,  1.0, 
@@ -41,10 +40,7 @@ export default async function webgpu() {
     ]
   };
 
-  const canvasSize = new Float32Array([
-    canvas.width,
-    canvas.height
-  ]); 
+  const canvasSize = new Float32Array([canvas.width, canvas.height]); 
   const canvasSizeBuffer = device.createBuffer({
     size: canvasSize.byteLength,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -62,15 +58,11 @@ export default async function webgpu() {
     new Hittable([2.0, 0.0, -7.0, 0.0], 0.5, 1.0, [1.0, 1.0, 1.0, 0.0], 0.3),
     new Hittable([-2.0, 0.0, -8.0, 0.0], 0.5, 1.0, [0.8, 0.8, 1.0, 0.0], 0.1)
   ];
-  const allData = spheres.flatMap(sphere => sphere.arrayFormat);
-  const hittablesData = new Float32Array(allData);
-  console.log(hittablesData)
+
   const hittablesBuffer = device.createBuffer({
     size: 192,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
   });
-  device.queue.writeBuffer(hittablesBuffer, 0, hittablesData);
-  console.log(hittablesBuffer)
 
   const hittablesCountBuffer = device.createBuffer({
     size: 4,
@@ -90,9 +82,8 @@ export default async function webgpu() {
     .setPrimitive("triangle-list")
     .build()
 
-   const bindGroupLayout = renderPipeline.getBindGroupLayout(0);
+  const bindGroupLayout = renderPipeline.getBindGroupLayout(0);
 
-  // Create the bind group
   let bindGroup = device.createBindGroup({
       layout: bindGroupLayout,
       entries: [
@@ -101,8 +92,116 @@ export default async function webgpu() {
         { binding: 2, resource: { buffer: hittablesCountBuffer }}
       ]
   });
-  const commandBuffer = engine.encodeRenderPass(6, renderPipeline, vertexBuffer, bindGroup);
-  await engine.submitCommand(commandBuffer);
+
+  // Function to update spheres and re-render
+  function updateAndRender() {
+    const allData = spheres.flatMap(sphere => sphere.arrayFormat);
+    const hittablesData = new Float32Array(allData);
+    device.queue.writeBuffer(hittablesBuffer, 0, hittablesData);
+    
+    const commandBuffer = engine.encodeRenderPass(6, renderPipeline, vertexBuffer, bindGroup);
+    engine.submitCommand(commandBuffer);
+  }
+
+  // Set up dat.gui controls
+  const gui = new dat.GUI();
+  
+  // Create control objects for each sphere
+  const sphere1Controls = {
+    red: spheres[0].albedo[0],
+    green: spheres[0].albedo[1], 
+    blue: spheres[0].albedo[2],
+    fuzz: spheres[0].fuzz,
+    radius: spheres[0].radius
+  };
+
+  const sphere2Controls = {
+    red: spheres[1].albedo[0],
+    green: spheres[1].albedo[1],
+    blue: spheres[1].albedo[2], 
+    fuzz: spheres[1].fuzz,
+    radius: spheres[1].radius
+  };
+
+  const sphere3Controls = {
+    red: spheres[2].albedo[0],
+    green: spheres[2].albedo[1],
+    blue: spheres[2].albedo[2],
+    fuzz: spheres[2].fuzz,
+    radius: spheres[2].radius
+  };
+
+  // Sphere 1 folder (Gold)
+  const sphere1Folder = gui.addFolder('Sphere 1 (Gold)');
+  sphere1Folder.add(sphere1Controls, 'red', 0, 1, 0.01).onChange((value) => {
+    spheres[0].albedo[0] = value;
+    updateAndRender();
+  });
+  sphere1Folder.add(sphere1Controls, 'green', 0, 1, 0.01).onChange((value) => {
+    spheres[0].albedo[1] = value;
+    updateAndRender();
+  });
+  sphere1Folder.add(sphere1Controls, 'blue', 0, 1, 0.01).onChange((value) => {
+    spheres[0].albedo[2] = value;
+    updateAndRender();
+  });
+  sphere1Folder.add(sphere1Controls, 'fuzz', 0, 1, 0.01).onChange((value) => {
+    spheres[0].fuzz = value;
+    updateAndRender();
+  });
+  sphere1Folder.add(sphere1Controls, 'radius', 0.1, 2, 0.1).onChange((value) => {
+    spheres[0].radius = value;
+    updateAndRender();
+  });
+  sphere1Folder.open();
+
+  // Sphere 2 folder (Silver)
+  const sphere2Folder = gui.addFolder('Sphere 2 (Silver)');
+  sphere2Folder.add(sphere2Controls, 'red', 0, 1, 0.01).onChange((value) => {
+    spheres[1].albedo[0] = value;
+    updateAndRender();
+  });
+  sphere2Folder.add(sphere2Controls, 'green', 0, 1, 0.01).onChange((value) => {
+    spheres[1].albedo[1] = value;
+    updateAndRender();
+  });
+  sphere2Folder.add(sphere2Controls, 'blue', 0, 1, 0.01).onChange((value) => {
+    spheres[1].albedo[2] = value;
+    updateAndRender();
+  });
+  sphere2Folder.add(sphere2Controls, 'fuzz', 0, 1, 0.01).onChange((value) => {
+    spheres[1].fuzz = value;
+    updateAndRender();
+  });
+  sphere2Folder.add(sphere2Controls, 'radius', 0.1, 2, 0.1).onChange((value) => {
+    spheres[1].radius = value;
+    updateAndRender();
+  });
+
+  // Sphere 3 folder (Blue)
+  const sphere3Folder = gui.addFolder('Sphere 3 (Blue)');
+  sphere3Folder.add(sphere3Controls, 'red', 0, 1, 0.01).onChange((value) => {
+    spheres[2].albedo[0] = value;
+    updateAndRender();
+  });
+  sphere3Folder.add(sphere3Controls, 'green', 0, 1, 0.01).onChange((value) => {
+    spheres[2].albedo[1] = value;
+    updateAndRender();
+  });
+  sphere3Folder.add(sphere3Controls, 'blue', 0, 1, 0.01).onChange((value) => {
+    spheres[2].albedo[2] = value;
+    updateAndRender();
+  });
+  sphere3Folder.add(sphere3Controls, 'fuzz', 0, 1, 0.01).onChange((value) => {
+    spheres[2].fuzz = value;
+    updateAndRender();
+  });
+  sphere3Folder.add(sphere3Controls, 'radius', 0.1, 2, 0.1).onChange((value) => {
+    spheres[2].radius = value;
+    updateAndRender();
+  });
+  // Initial render
+  updateAndRender();
 }
 
-webgpu(); 
+webgpu();
