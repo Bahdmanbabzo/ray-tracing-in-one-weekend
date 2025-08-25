@@ -108,10 +108,16 @@ fn ray_color(initial_ray_direction: vec3f, initial_ray_origin: vec3f) -> vec3f {
             let bounce_seed = f32(bounce) * 123.456 + dot(hit_point, vec3f(1.0, 1.0, 1.0));
             ray_origin = hit_point + normal * 0.001;
             
-            let reflected = reflect(normalize(ray_direction), normal);
-            let fuzz_vec = rand_unit_vec_analytic(bounce_seed) * hit_object.fuzz;  // ✅ Use buffer fuzz
-            ray_direction = normalize(reflected + fuzz_vec);
-            
+            if (hit_object.material == 2.0) {
+                var random_vector = rand_unit_vec_analytic(bounce_seed);
+                var scattered_direction = find_hemisphere(random_vector, normal);
+                ray_direction = normalize(scattered_direction);     
+            }else{
+                var reflected = reflect(normalize(ray_direction), normal);
+                var fuzz_vec = rand_unit_vec_analytic(bounce_seed) * hit_object.fuzz;  // ✅ Use buffer fuzz
+                ray_direction = normalize(reflected + fuzz_vec);
+            }
+
             attenuation = attenuation * hit_object.albedo.xyz;  // ✅ Use buffer color
         } else {
             let a = 0.5 * (ray_direction.y + 1.0); 

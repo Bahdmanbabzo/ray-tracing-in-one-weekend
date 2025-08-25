@@ -56,11 +56,12 @@ export default async function webgpu() {
   const spheres = [
     new Hittable([0.0, 0.0, -6.0, 0.0], 1.0, 1.0, [1.0, 0.6, 0.2, 0.0], 0.03),
     new Hittable([2.0, 0.0, -7.0, 0.0], 0.5, 1.0, [1.0, 1.0, 1.0, 0.0], 0.3),
-    new Hittable([-2.0, 0.0, -8.0, 0.0], 0.5, 1.0, [0.8, 0.8, 1.0, 0.0], 0.1)
+    new Hittable([-2.0, 0.0, -8.0, 0.0], 0.5, 1.0, [0.8, 0.8, 1.0, 0.0], 0.1),
+     new Hittable([0.0, 100.5, -6.0, 0.0], 100.0, 2.0, [0.5, 0.8, 0.3, 0.0], 0.0)
   ];
 
   const hittablesBuffer = device.createBuffer({
-    size: 192,
+    size: 256,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
   });
 
@@ -68,7 +69,7 @@ export default async function webgpu() {
     size: 4,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
   });
-  device.queue.writeBuffer(hittablesCountBuffer, 0, new Int32Array([3]));
+  device.queue.writeBuffer(hittablesCountBuffer, 0, new Int32Array([4]));
 
   const shaderModule = device.createShaderModule({
     code: rayTracer
