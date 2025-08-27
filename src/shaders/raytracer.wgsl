@@ -89,8 +89,8 @@ fn ray_color(initial_ray_direction: vec3f, initial_ray_origin: vec3f) -> vec3f {
         // Use the actual hittable buffer
         for(var i: i32 = 0; i < hittable_count; i++) {
             let t = hit_sphere(
-                hittable_objects[i].position.xyz,  // ✅ Use buffer position
-                hittable_objects[i].radius,        // ✅ Use buffer radius
+                hittable_objects[i].position.xyz, 
+                hittable_objects[i].radius,       
                 ray_origin, 
                 ray_direction
             );
@@ -101,7 +101,7 @@ fn ray_color(initial_ray_direction: vec3f, initial_ray_origin: vec3f) -> vec3f {
         }
 
         if (hit_sphere_index >= 0) {
-            let hit_object = hittable_objects[hit_sphere_index];  // ✅ Use buffer data
+            let hit_object = hittable_objects[hit_sphere_index]; 
             let hit_point = ray_origin + closest_t * ray_direction; 
             let normal = normalize(hit_point - hit_object.position.xyz);
             
@@ -114,11 +114,11 @@ fn ray_color(initial_ray_direction: vec3f, initial_ray_origin: vec3f) -> vec3f {
                 ray_direction = normalize(scattered_direction);     
             }else{
                 var reflected = reflect(normalize(ray_direction), normal);
-                var fuzz_vec = rand_unit_vec_analytic(bounce_seed) * hit_object.fuzz;  // ✅ Use buffer fuzz
+                var fuzz_vec = rand_unit_vec_analytic(bounce_seed) * hit_object.fuzz;
                 ray_direction = normalize(reflected + fuzz_vec);
             }
 
-            attenuation = attenuation * hit_object.albedo.xyz;  // ✅ Use buffer color
+            attenuation = attenuation * hit_object.albedo.xyz;
         } else {
             let a = 0.5 * (ray_direction.y + 1.0); 
             let sky_color = mix(vec3f(1.0, 1.0, 1.0), vec3f(0.5, 0.7, 1.0), a);
