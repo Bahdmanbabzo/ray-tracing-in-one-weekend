@@ -1,11 +1,17 @@
 import Engine from './engine/engine.js';
 import RenderPipelineBuilder from './engine/renderPipeline.js';
-import quadShaderCode from './shaders/quad.wgsl?raw';
-import rayTracer from './shaders/rayTracer.wgsl?raw';
 import { Hittable } from './hittables.js';
 import * as dat from 'dat.gui'
 
 export default async function webgpu() {
+  const quadShaderResponse = await fetch('/shaders/quad.wgsl');
+  const quadShaderCode = await quadShaderResponse.text();
+  console.log(quadShaderCode);
+
+  const rayTracerResponse = await fetch('/shaders/raytracer.wgsl');
+  const rayTracerCode = await rayTracerResponse.text();
+  console.log(rayTracerCode);
+
   const canvas = document.querySelector('canvas');
   const engine  = await Engine.initialize(canvas);
   const device = engine.device;
@@ -72,7 +78,7 @@ export default async function webgpu() {
   device.queue.writeBuffer(hittablesCountBuffer, 0, new Int32Array([4]));
 
   const shaderModule = device.createShaderModule({
-    code: rayTracer
+    code: rayTracerCode
   })
 
   const pipelineBuilder = new RenderPipelineBuilder(device);
